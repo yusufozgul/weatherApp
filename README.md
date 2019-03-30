@@ -7,6 +7,8 @@ API AcuueWeather'dan sağlanmıştır. Günlük 50 request sınırı vardır.
 
 İkonlar FontAwesome kullanılarak oluşturulmuştur.
 
+Accuweather Türkiye şehir kodları tarafımca hazırlanmıştır. Accuweatherin API'larında kullanılabilir.
+
 ![Alt text](https://github.com/yusufozgul/weatherApp/raw/master/SS/SS1.png)
 
 
