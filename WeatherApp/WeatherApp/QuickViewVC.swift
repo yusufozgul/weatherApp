@@ -46,13 +46,9 @@ class QuickViewVC: UIViewController
 //        NetworkActivity show
             loading.startAnimating()
         }
-
-//        İşlemler arkaplanda devam etmesi için async işleme alındı.
-        DispatchQueue.main.async {
 //        fetch weather and city info
-            self.fetchCitys()
-            self.fetchWeatherInfo()
-        }
+        self.fetchCitys()
+        self.fetchWeatherInfo()
     }
     func fetchCitys()
     {
@@ -91,11 +87,8 @@ class QuickViewVC: UIViewController
         minTemperature.removeAll()
         dayIcon.removeAll()
         
-        var loopNumber = 0
         for city in savedCity
         {
-//            Kaçıncı döngüde olduğumuzu tutuyor.
-            loopNumber += 1
 //            Fetch and parse weather info
             if let urlStirng = URL(string: "https://dataservice.accuweather.com/forecasts/v1/daily/5day/\(city.value)?apikey=FA26YLIvWfOaCBniO8YtkGpknT53hk8M&language=tr-tr&metric=true")
             {
@@ -111,8 +104,9 @@ class QuickViewVC: UIViewController
                         self.maxTemperature.append(weather.max)
                         self.minTemperature.append(weather.min)
                         self.dayIcon.append(weather.icon)
-//                        Eğer sonuncu döngüseysek CollectionView'umuzu yenileyecek.
-                        if loopNumber == self.savedCity.count
+//                        CollectionView işlemi arkaplana atarak yenilenmesini sağladık.
+ //                        Not: eğer arkaplana atmadan çalıştırılırsa autoLayout Engine hatalar oluşturuyor.
+                        DispatchQueue.main.asyncAfter(deadline: .now())
                         {
                             self.weatherCollectionView.reloadData()
                         }
