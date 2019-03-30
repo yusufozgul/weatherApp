@@ -152,7 +152,7 @@ public class DetailsDecoder
         return weatherInfo
     }
     
-    //    Epoch Date decoder, Epoch tipindeki tarih bilgisi GG-AA-YYYY tipine dönüştürülür.
+    //    Epoch Date decoder, Epoch tipindeki tarih bilgisi gün tipine dönüştürülür.
     public func dateDecoder(epochDate: String) -> String {
         let date = Date(timeIntervalSince1970: (Double(epochDate))!)
         let dateFormatter = DateFormatter()
