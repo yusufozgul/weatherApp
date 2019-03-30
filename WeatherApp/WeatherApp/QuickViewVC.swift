@@ -18,6 +18,7 @@ class QuickViewVC: UIViewController
     var citysCode: [String:String] = [:]
     var savedCity: [String:String] = [:]
     var selectCode: String = ""
+    var selectCityName: String = ""
     
     var citysName: [String] = []
     var maxTemperature: [String] = []
@@ -95,10 +96,8 @@ class QuickViewVC: UIViewController
         {
 //            Kaçıncı döngüde olduğumuzu tutuyor.
             loopNumber += 1
-//               https://dataservice.accuweather.com/forecasts/v1/daily/5day/\(city.value)?apikey=FA26YLIvWfOaCBniO8YtkGpknT53hk8M&language=tr-tr&metric=true
-//            https://yusufozgul.com/weather.json
 //            Fetch and parse weather info
-            if let urlStirng = URL(string: "https://yusufozgul.com/weather.json")
+            if let urlStirng = URL(string: "https://dataservice.accuweather.com/forecasts/v1/daily/5day/\(city.value)?apikey=FA26YLIvWfOaCBniO8YtkGpknT53hk8M&language=tr-tr&metric=true")
             {
                 let task = URLSession.shared.dataTask(with: urlStirng) { (data, response, error) in
                     if error != nil
@@ -133,7 +132,6 @@ class QuickViewVC: UIViewController
             
             if self.citysCode[answer!] != nil
             {
-                print("aaaaa")
                 self.infoLAbel.isHidden = true
                 self.savedCity.updateValue(self.citysCode[answer!]!, forKey: answer!)
                 UserDefaults.standard.set(self.savedCity, forKey: "savedCity")
@@ -191,7 +189,6 @@ extension QuickViewVC: UICollectionViewDelegate, UICollectionViewDataSource
             default:
                 cell.weatherIcon.image = UIImage(named: "notFound")
             }
-            
             return cell
         }
         else
@@ -202,6 +199,7 @@ extension QuickViewVC: UICollectionViewDelegate, UICollectionViewDataSource
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath)
     {
         selectCode = citysCode[citysName[indexPath.row].uppercased()]!
+        selectCityName = citysName[indexPath.row]
         if selectCode != ""
         {
             performSegue(withIdentifier: "showWeatherDetails", sender: nil)
@@ -215,6 +213,7 @@ extension QuickViewVC
         {
             let detailVC = segue.destination as! WeatherDetail
             detailVC.cityCode = selectCode
+            detailVC.cityName = selectCityName
         }
         
     }

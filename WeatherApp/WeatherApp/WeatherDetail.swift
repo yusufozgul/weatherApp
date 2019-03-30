@@ -20,22 +20,20 @@ class WeatherDetail: UIViewController
     var iconArray: [String] = []
     
     var cityCode: String = ""
+    var cityName: String = ""
     
     override func viewDidLoad()
     {
         super.viewDidLoad()
 //        update view
-        navigationItem.title = "Detaylar"
+        navigationItem.title = cityName.capitalizingFirstLetter()
         fetchWeatherDetails()
         print(cityCode)
     }
 
     func fetchWeatherDetails()
-    {
-//                       https://dataservice.accuweather.com/forecasts/v1/daily/5day/\(cityCode)?apikey=FA26YLIvWfOaCBniO8YtkGpknT53hk8M&language=tr-tr&metric=true
-        
-        //            https://yusufozgul.com/weather.json
-        if let urlStirng = URL(string: "https://yusufozgul.com/weather.json")
+    {        
+        if let urlStirng = URL(string: "https://dataservice.accuweather.com/forecasts/v1/daily/5day/\(cityCode)?apikey=FA26YLIvWfOaCBniO8YtkGpknT53hk8M&language=tr-tr&metric=true")
         {
              let task = URLSession.shared.dataTask(with: urlStirng) { (data, response, error) in
                 if error != nil
@@ -111,5 +109,15 @@ extension WeatherDetail: UITableViewDelegate, UITableViewDataSource
         {
             return DetailTableView()
         }
+    }
+}
+// İl ismini ilk harifi büyük olacak şekilde güncelleme extension
+extension String {
+    func capitalizingFirstLetter() -> String {
+        return prefix(1).uppercased() + self.lowercased().dropFirst()
+    }
+    
+    mutating func capitalizeFirstLetter() {
+        self = self.capitalizingFirstLetter()
     }
 }
