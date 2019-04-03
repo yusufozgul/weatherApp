@@ -22,7 +22,7 @@
                                 <rect key="frame" x="20" y="44" width="374" height="818"/>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Yusuf ÖZGÜL" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Akf-Ch-gdt">
-                                <rect key="frame" x="149" y="841.5" width="116" height="20.5"/>
+                                <rect key="frame" x="155" y="825.5" width="104.5" height="20.5"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
@@ -34,9 +34,8 @@
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="MJn-YJ-BVM" secondAttribute="bottom" id="5tq-2o-oLD"/>
                             <constraint firstItem="MJn-YJ-BVM" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="7SQ-mt-R41"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="MJn-YJ-BVM" secondAttribute="trailing" constant="20" id="8O3-GW-CsG"/>
-                            <constraint firstItem="Akf-Ch-gdt" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="149" id="FPt-nW-IGI"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="Akf-Ch-gdt" secondAttribute="trailing" constant="149" id="kdh-0i-H1R"/>
-                            <constraint firstItem="Akf-Ch-gdt" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="khL-BV-FcQ"/>
+                            <constraint firstItem="Akf-Ch-gdt" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="gzv-zT-ZNP"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="Akf-Ch-gdt" secondAttribute="bottom" constant="16" id="xIT-fX-Heq"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
