@@ -10,114 +10,110 @@ import UIKit
 
 class WeatherDetail: UIViewController
 {
+    
+    @IBOutlet weak var dayLabel: UILabel!
     @IBOutlet weak var maxDegree: UILabel!
-    @IBOutlet weak var detailText: UITextView!
-    @IBOutlet weak var detailTableView: UITableView!
-    
-    var dateArray: [String] = []
-    var maxDegreeArray: [String] = []
-    var minDegreeArray: [String] = []
-    var iconArray: [String] = []
-    
-    var cityCode: String = ""
-    var cityName: String = ""
-    
-    override func viewDidLoad()
-    {
-        super.viewDidLoad()
-//        update view
-        navigationItem.title = cityName.capitalizingFirstLetter()
-        fetchWeatherDetails()
-        print(cityCode)
-    }
+	@IBOutlet weak var detailText: UILabel!
+	@IBOutlet weak var detailTableView: UITableView!
 
-    func fetchWeatherDetails()
-    {        
-        if let urlStirng = URL(string: "https://dataservice.accuweather.com/forecasts/v1/daily/5day/\(cityCode)?apikey=FA26YLIvWfOaCBniO8YtkGpknT53hk8M&language=tr-tr&metric=true")
+	var dailyForecast: [DailyForecast] = []
+    var today: Headline?
+    var selectCity: [String:String] = [:] // Detayları görünecek şehir dictionarysi
+    var apiKey = "" // Accuweather API key, QuickView'dan gönderiliyor.
+
+	override func viewDidLoad()
+	{
+		super.viewDidLoad()
+//        update view
+        navigationItem.title = selectCity["city"]?.capitalizingFirstLetter
+		fetchWeatherDetails()
+	}
+
+	func fetchWeatherDetails()
+	{
+        if let urlStirng = URL(string: "https://dataservice.accuweather.com/forecasts/v1/daily/5day/\(selectCity["code"]!)?apikey=\(apiKey)&language=tr-tr&metric=true")
         {
-             let task = URLSession.shared.dataTask(with: urlStirng) { (data, response, error) in
-                if error != nil
-                {
-                    print("HATA")
-                }
+			let task = URLSession.shared.dataTask(with: urlStirng) { (data, response, error) in
+				if error != nil {
+					print(error!.localizedDescription)
+				}
                 else
                 {
-                    let weather = DetailsDecoder.init().decoder(response: data!)
-                    self.maxDegree.text = weather.today.max
-                    self.detailText.text = weather.today.detailText
-                    
-                    self.dateArray.append(weather.dayLater1.date)
-                    self.dateArray.append(weather.dayLater2.date)
-                    self.dateArray.append(weather.dayLater3.date)
-                    self.dateArray.append(weather.dayLater4.date)
-                    
-                    self.maxDegreeArray.append(weather.dayLater1.max)
-                    self.maxDegreeArray.append(weather.dayLater2.max)
-                    self.maxDegreeArray.append(weather.dayLater3.max)
-                    self.maxDegreeArray.append(weather.dayLater4.max)
+					DispatchQueue.main.async
+                        {
+						do {
+							let decoder = JSONDecoder()
+							decoder.dateDecodingStrategy = .secondsSince1970
+							let weather = try decoder.decode(WeatherResponse.self, from: data!)
 
-                    self.minDegreeArray.append(weather.dayLater1.min)
-                    self.minDegreeArray.append(weather.dayLater2.min)
-                    self.minDegreeArray.append(weather.dayLater3.min)
-                    self.minDegreeArray.append(weather.dayLater4.min)
-                    
-                    self.iconArray.append(weather.dayLater1.icon)
-                    self.iconArray.append(weather.dayLater2.icon)
-                    self.iconArray.append(weather.dayLater3.icon)
-                    self.iconArray.append(weather.dayLater4.icon)
-                    
-                    self.detailTableView.reloadData()
-                }
-            }
-            task.resume()
-        }
-    }
+							self.maxDegree.text = weather.dailyForecasts.first!.temperature.maximum.value.degreeFormat
+							self.detailText.text = weather.headline.text
+                            self.today = weather.headline
+							self.dailyForecast = weather.dailyForecasts
+
+							self.detailTableView.reloadData()
+						} catch {
+							print("Parse Error \(error)")
+						}
+					}
+				}
+			}
+			task.resume()
+		}
+	}
 }
 
 extension WeatherDetail: UITableViewDelegate, UITableViewDataSource
 {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return iconArray.count
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if let cell = tableView.dequeueReusableCell(withIdentifier: "tableViewCell", for: indexPath) as? DetailTableView
-        {
-            cell.dateLabel.text = dateArray[indexPath.row]
-            cell.maxDegree.text = maxDegreeArray[indexPath.row]
-            cell.minDegree.text = minDegreeArray[indexPath.row]
-            switch iconArray[indexPath.row]
+	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+		return dailyForecast.count
+	}
+
+	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+		if let cell = tableView.dequeueReusableCell(withIdentifier: "tableViewCell", for: indexPath) as? DetailTableView
+		{
+			let weather = self.dailyForecast[indexPath.row]
+
+            dayLabel.text = dailyForecast.first?.epochDate.weekDayName
+			cell.dateLabel.text = weather.epochDate.weekDayName
+			cell.maxDegree.text = weather.temperature.maximum.value.degreeFormat
+			cell.minDegree.text = weather.temperature.minimum.value.degreeFormat
+//            cell.selectionStyle
+
+            switch weather.day.icon
             {
-            case ("1"), ("2"), ("3"), ("4"), ("5"):
+            case 1...5:
                 cell.dayIcon.image = UIImage(named: "sun")
-            case ("6"), ("7"), ("8"), ("11"):
+            case 6...8, 11:
                 cell.dayIcon.image = UIImage(named: "cloud")
-            case ("12"), ("13"), ("14"), ("16"), ("17"):
+            case 12...14, 16, 17:
                 cell.dayIcon.image = UIImage(named: "rain")
-            case ("15"), ("18"):
+            case 15, 18:
                 cell.dayIcon.image = UIImage(named: "thunder")
-            case ("19"), ("22"), ("23"), ("24"), ("25"), ("26"), ("29"):
+            case 19, 22...26, 29:
                 cell.dayIcon.image = UIImage(named: "snowflake")
-            case ("32"):
+            case 32:
                 cell.dayIcon.image = UIImage(named: "wind")
             default:
                 cell.dayIcon.image = UIImage(named: "notFound")
             }
-            return cell
-        }
-        else
-        {
-            return DetailTableView()
-        }
-    }
-}
-// İl ismini ilk harifi büyük olacak şekilde güncelleme extension
-extension String {
-    func capitalizingFirstLetter() -> String {
-        return prefix(1).uppercased() + self.lowercased().dropFirst()
-    }
-    
-    mutating func capitalizeFirstLetter() {
-        self = self.capitalizingFirstLetter()
+			return cell
+		}
+		else
+		{
+			return DetailTableView()
+		}
+	}
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
+    {
+        let weather = self.dailyForecast[indexPath.row]
+        
+        dayLabel.text = weather.epochDate.weekDayName
+        maxDegree.text = weather.temperature.maximum.value.degreeFormat
+        
+        if indexPath.row == 0 // Seçilen gün bugün ise detaylı text yazısı bilgisi getir.
+        { detailText.text = today?.text }
+        else // Seçilen gün bugün değilse genel durum bilgisini yazdır.
+        { detailText.text = "\(weather.epochDate.weekDayName) \(weather.day.iconPhrase)" }
     }
 }

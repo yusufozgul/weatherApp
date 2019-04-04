@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import WeatherAppAPI
 
 class QuickViewVC: UIViewController
 {
@@ -15,15 +14,16 @@ class QuickViewVC: UIViewController
     @IBOutlet weak var loading: UIActivityIndicatorView!
     @IBOutlet weak var infoLAbel: UILabel!
     
-    var citysCode: [String:String] = [:]
-    var savedCity: [String:String] = [:]
-    var selectCode: String = ""
-    var selectCityName: String = ""
+    var citysCode: [String:String] = [:] // kullanılabilir şehirler dizisi
+    var savedCity: [String:String] = [:] // kayıtlı şehirler dizisi
+    var selectCity: [String:String] = [:] // Detayları görünecek şehir dictionarysi
     
     var citysName: [String] = []
     var maxTemperature: [String] = []
     var minTemperature: [String] = []
-    var dayIcon: [String] = []
+    var dayIcon: [Int] = []
+    
+    let apiKey = "FA26YLIvWfOaCBniO8YtkGpknT53hk8M" // Accuweather API Key
     
     override func viewDidLoad()
     {
@@ -36,7 +36,7 @@ class QuickViewVC: UIViewController
         savedCity = UserDefaults.standard.value(forKey: "savedCity") as? [String : String] ?? [:]
         
 //        Eklenen şehir yoksa bilgi verilir.
-        if savedCity == [:]
+        if savedCity.isEmpty
         {
             infoLAbel.isHidden = false
             infoLAbel.text = "Lütfen Şehir ekleyiniz."
@@ -54,22 +54,26 @@ class QuickViewVC: UIViewController
     {
         if let urlStirng = URL(string: "https://raw.githubusercontent.com/yusufozgul/weatherApp/master/il.json")
         {
+            loading.startAnimating()
             let task = URLSession.shared.dataTask(with: urlStirng) { (data, response, error) in
                 if error != nil
                 {
-                    print("TASK HATA")
+                    print(error!.localizedDescription)
                 }
                 else
                 {
-                    let cityResults = try! JSONSerialization.jsonObject(with: data!, options: [])
-                    guard let cityArray = cityResults as? [[String: String]] else {
-                        print("PARSE ERROR")
-                        return
-                    }
-                    
-                    for city in cityArray[0]
+                    do
                     {
-                        self.citysCode.updateValue(city.value, forKey: city.key)
+                        let cityDecoder = JSONDecoder()
+                        let cities = try cityDecoder.decode([String:String].self, from: data!)
+                        
+                        for city in cities
+                        {
+                            self.citysCode.updateValue(city.value, forKey: city.key)
+                        }
+                    } catch
+                    {
+                        print("Parse Error \(error)")
                     }
                 }
             }
@@ -90,25 +94,33 @@ class QuickViewVC: UIViewController
         for city in savedCity
         {
 //            Fetch and parse weather info
-            if let urlStirng = URL(string: "https://dataservice.accuweather.com/forecasts/v1/daily/5day/\(city.value)?apikey=FA26YLIvWfOaCBniO8YtkGpknT53hk8M&language=tr-tr&metric=true")
+            if let urlStirng = URL(string: "https://dataservice.accuweather.com/forecasts/v1/daily/5day/\(city.value)?apikey=\(apiKey)&language=tr-tr&metric=true")
             {
                 let task = URLSession.shared.dataTask(with: urlStirng) { (data, response, error) in
                     if error != nil
                     {
-                        print("HATA")
+                        print(error!.localizedDescription)
                     }
                     else
                     {
-                        let weather = DayWeatherDecoder.init().decoder(response: data!)
-                        self.citysName.append(city.key)
-                        self.maxTemperature.append(weather.max)
-                        self.minTemperature.append(weather.min)
-                        self.dayIcon.append(weather.icon)
-//                        CollectionView işlemi arkaplana atarak yenilenmesini sağladık.
- //                        Not: eğer arkaplana atmadan çalıştırılırsa autoLayout Engine hatalar oluşturuyor.
-                        DispatchQueue.main.asyncAfter(deadline: .now())
-                        {
-                            self.weatherCollectionView.reloadData()
+                        DispatchQueue.main.async {
+                            do
+                            {
+                                let weatherDecoder = JSONDecoder()
+                                weatherDecoder.dateDecodingStrategy = .secondsSince1970
+                                let weather = try weatherDecoder.decode(WeatherResponse.self, from: data!)
+                                
+                                self.citysName.append(city.key.capitalizingFirstLetter)
+                                self.maxTemperature.append((weather.dailyForecasts.first?.temperature.maximum.value.degreeFormat)!)
+                                self.minTemperature.append((weather.dailyForecasts.first?.temperature.minimum.value.degreeFormat)!)
+                                self.dayIcon.append((weather.dailyForecasts.first?.day.icon)!)
+                                
+                                self.weatherCollectionView.reloadData()
+                            }
+                            catch
+                            {
+                                print("Parse Hatası \(error)")
+                            }
                         }
                     }
                 }
@@ -116,6 +128,7 @@ class QuickViewVC: UIViewController
             }
         }
     }
+
     @IBAction func addNewCity(_ sender: Any)
     {
         let addCity = UIAlertController(title: "Yeni Şehir Ekleme", message: "Lütfen şehir adını giriniz", preferredStyle: .alert)
@@ -166,19 +179,20 @@ extension QuickViewVC: UICollectionViewDelegate, UICollectionViewDataSource
             cell.cityName.text = citysName[indexPath.row]
             cell.maxTemperature.text = maxTemperature[indexPath.row]
             cell.minTemperature.text = minTemperature[indexPath.row]
+            
             switch dayIcon[indexPath.row]
             {
-            case ("1"), ("2"), ("3"), ("4"), ("5"):
+            case 1...5:
                 cell.weatherIcon.image = UIImage(named: "sun")
-            case ("6"), ("7"), ("8"), ("11"):
+            case 6...8, 11:
                 cell.weatherIcon.image = UIImage(named: "cloud")
-            case ("12"), ("13"), ("14"), ("16"), ("17"):
+            case 12...14, 16, 17:
                 cell.weatherIcon.image = UIImage(named: "rain")
-            case ("15"), ("18"):
+            case 15, 18:
                 cell.weatherIcon.image = UIImage(named: "thunder")
-            case ("19"), ("22"), ("23"), ("24"), ("25"), ("26"), ("29"):
+            case 19, 22...26, 29:
                 cell.weatherIcon.image = UIImage(named: "snowflake")
-            case ("32"):
+            case 32:
                 cell.weatherIcon.image = UIImage(named: "wind")
             default:
                 cell.weatherIcon.image = UIImage(named: "notFound")
@@ -192,9 +206,11 @@ extension QuickViewVC: UICollectionViewDelegate, UICollectionViewDataSource
     }
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath)
     {
-        selectCode = citysCode[citysName[indexPath.row].uppercased()]!
-        selectCityName = citysName[indexPath.row]
-        if selectCode != ""
+        selectCity.removeAll()
+        selectCity.updateValue(citysCode[citysName[indexPath.row].uppercased()]!, forKey: "code")
+        selectCity.updateValue(citysName[indexPath.row], forKey: "city")
+
+        if !(selectCity.values.isEmpty)
         {
             performSegue(withIdentifier: "showWeatherDetails", sender: nil)
         }
@@ -203,11 +219,12 @@ extension QuickViewVC: UICollectionViewDelegate, UICollectionViewDataSource
 extension QuickViewVC
 {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if  segue.identifier == "showWeatherDetails" && selectCode != ""
+        if  segue.identifier == "showWeatherDetails" && !(selectCity.values.isEmpty)
         {
             let detailVC = segue.destination as! WeatherDetail
-            detailVC.cityCode = selectCode
-            detailVC.cityName = selectCityName
+            detailVC.selectCity["code"] = selectCity["code"]!
+            detailVC.selectCity["city"] = selectCity["city"]!
+            detailVC.apiKey = apiKey
         }
         
     }
