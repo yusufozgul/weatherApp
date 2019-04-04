@@ -2,7 +2,8 @@
 
 Swift Hava durumu uygulaması.
 
-API AcuueWeather'dan sağlanmıştır. Günlük 50 request sınırı vardır.
+API AccueWeather'dan sağlanmıştır. Günlük 50 request sınırı vardır.
+apiKey değişkenine kendi keyinizi ekleyerek kullanabilirsiniz. 
 
 
 İkonlar FontAwesome kullanılarak oluşturulmuştur.
