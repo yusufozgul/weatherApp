@@ -24,6 +24,7 @@ class DetailVCTest: XCTestCase {
 
         // UI tests must launch the application that they test. Doing this in setup will make sure it happens for each test method.
         weatherApp.launch()
+        waitForExpectations(timeout: 3, handler: nil)
         if weatherApp.collectionViews.cells.count > 0
         {
             //        Open DetailVC
@@ -83,9 +84,13 @@ class DetailVCTest: XCTestCase {
         /*
          Detaylar ekranından geriye dönüş segue'sinin kontrolü
  */
-        let backButton = weatherApp.navigationBars.buttons.firstMatch
-        backButton.tap()
-        XCTAssertTrue(weatherApp.navigationBars["Hava Durumu"].exists, "DetailVC'den geriye Segue sorunu")
+        if weatherApp.collectionViews.cells.count > 0
+        {
+            let backButton = weatherApp.navigationBars.buttons.firstMatch
+            backButton.tap()
+            XCTAssertTrue(weatherApp.navigationBars["Hava Durumu"].exists, "DetailVC'den geriye Segue sorunu")
+        }
+        
     }
     
     func addCity()
