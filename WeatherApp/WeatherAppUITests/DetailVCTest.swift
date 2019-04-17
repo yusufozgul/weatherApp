@@ -24,7 +24,6 @@ class DetailVCTest: XCTestCase {
 
         // UI tests must launch the application that they test. Doing this in setup will make sure it happens for each test method.
         weatherApp.launch()
-        waitForExpectations(timeout: 3, handler: nil)
         if weatherApp.collectionViews.cells.count > 0
         {
             //        Open DetailVC
